@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>PulseOS Pro — Enterprise Clinical Operating System</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+  
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <canvas id="threeCanvas" aria-hidden="true"></canvas>
+
+  <div class="loading-screen" id="loadingScreen" role="status" aria-label="Loading System">
+    <div class="spinner"></div>
+    <p>Initializing PulseOS Enterprise Clinical Core...</p>
+  </div>
+
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <div class="modal-overlay" id="appModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modalTitle">Form Action</h3>
+        <button class="icon-btn-sm" id="modalClose" aria-label="Close Modal"><i class="ri-close-line"></i></button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <div class="app-container">
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-logo">
+          <i class="ri-pulse-fill brand-icon"></i>
+          <span>PulseOS <small class="version-tag">PRO v4.5</small></span>
+        </div>
+        <button class="icon-btn mobile-close" id="sidebarClose" aria-label="Close Sidebar"><i class="ri-close-line"></i></button>
+      </div>
+
+      <nav class="sidebar-nav">
+        <ul>
+          <li class="nav-item active" data-section="dashboard">
+            <a href="#dashboard"><i class="ri-dashboard-3-line"></i><span>Command Center</span></a>
+          </li>
+          <li class="nav-item" data-section="patients">
+            <a href="#patients"><i class="ri-user-heart-line"></i><span>Patient Registry</span><span class="nav-badge" id="navBadgePatients">0</span></a>
+          </li>
+          <li class="nav-item" data-section="doctors">
+            <a href="#doctors"><i class="ri-stethoscope-line"></i><span>Medical Faculty</span></a>
+          </li>
+          <li class="nav-item" data-section="appointments">
+            <a href="#appointments"><i class="ri-calendar-event-line"></i><span>Appointments</span></a>
+          </li>
+          <li class="nav-item" data-section="departments">
+            <a href="#departments"><i class="ri-building-4-line"></i><span>Ward Capacity</span></a>
+          </li>
+          <li class="nav-item" data-section="pharmacy">
+            <a href="#pharmacy"><i class="ri-capsule-line"></i><span>Pharmacy Stock</span></a>
+          </li>
+          <li class="nav-item" data-section="laboratory">
+            <a href="#laboratory"><i class="ri-flask-line"></i><span>Lab Diagnostics</span></a>
+          </li>
+          <li class="nav-item" data-section="billing">
+            <a href="#billing"><i class="ri-file-list-3-line"></i><span>Revenue & Invoicing</span></a>
+          </li>
+          <li class="nav-item" data-section="reports">
+            <a href="#reports"><i class="ri-bar-chart-box-line"></i><span>Analytics & EHR</span></a>
+          </li>
+          <li class="nav-item" data-section="settings">
+            <a href="#settings"><i class="ri-settings-4-line"></i><span>System Settings</span></a>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="hipaa-badge"><i class="ri-shield-check-line"></i> HIPAA Compliant</div>
+        <button class="btn btn-secondary w-full" id="btnResetAllData"><i class="ri-refresh-line"></i> Reset Seed Data</button>
+      </div>
+    </aside>
+
+    <div class="main-wrapper">
+      <header class="top-nav">
+        <div class="nav-left">
+          <button class="icon-btn mobile-toggle" id="sidebarToggle" aria-label="Toggle Sidebar"><i class="ri-menu-line"></i></button>
+          <div class="search-bar">
+            <i class="ri-search-line"></i>
+            <input type="text" placeholder="Global EHR Search..." id="globalSearch" aria-label="Global Search">
+          </div>
+        </div>
+
+        <div class="nav-right">
+          <div class="live-telemetry-pill desktop-only">
+            <span class="pulse-dot"></span> System Nominal
+          </div>
+
+          <button class="icon-btn" id="themeToggle" title="Toggle Light/Dark Theme" aria-label="Toggle Theme">
+            <i class="ri-sun-line" id="themeIcon"></i>
+          </button>
+
+          <div class="notification-wrapper">
+            <button class="icon-btn" id="notifBtn" aria-label="Notifications">
+              <i class="ri-notification-3-line"></i>
+              <span class="badge"></span>
+            </button>
+            <div class="notification-dropdown" id="notifDropdown">
+              <div class="notif-header">
+                <h3>Clinical Alerts</h3>
+                <span class="notif-count">3 Active</span>
+              </div>
+              <ul class="notif-list">
+                <li class="notif-item unread">
+                  <i class="ri-alarm-warning-line icon-danger"></i>
+                  <div>
+                    <p><strong>ICU Saturation Warning:</strong> Unit 3 bed capacity reached 96%.</p>
+                    <span class="time">2 mins ago</span>
+                  </div>
+                </li>
+                <li class="notif-item unread">
+                  <i class="ri-check-double-line icon-success"></i>
+                  <div>
+                    <p><strong>Lab Results Ready:</strong> Cardiac panel completed for Marcus Sterling.</p>
+                    <span class="time">12 mins ago</span>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="user-profile" id="userProfileBtn">
+            <img src="SARIM.png" alt="User Avatar" class="avatar" id="headerAvatar">
+            <div class="user-info desktop-only">
+              <span class="name" id="headerUserName">SARIM</span>
+              <span class="role">Chief Medical Officer</span>
+            </div>
+            <i class="ri-arrow-down-s-line desktop-only"></i>
+
+            <div class="profile-dropdown" id="profileDropdown">
+              <a href="#settings" class="dropdown-nav" data-section="settings"><i class="ri-user-3-line"></i> Profile Settings</a>
+              <a href="#reports" class="dropdown-nav" data-section="reports"><i class="ri-bar-chart-2-line"></i> Analytics</a>
+              <hr>
+              <a href="#" class="danger-text" id="btnSignOut"><i class="ri-logout-box-r-line"></i> Sign Out</a>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="dashboard-body">
+
+        <section class="dashboard-section active" id="view-dashboard">
+          <div class="dashboard-header">
+            <div>
+              <h1>Hospital Command Center</h1>
+              <p class="subtitle">Real-time facility telemetry, active patient vital trends, and unit capacity metrics.</p>
+            </div>
+            <div class="quick-actions">
+              <button class="btn btn-secondary" id="btnRefreshDash"><i class="ri-refresh-line"></i> Sync</button>
+              <button class="btn btn-primary" id="btnQuickAdmit"><i class="ri-user-add-line"></i> Admit</button>
+            </div>
+          </div>
+
+          <div class="kpi-grid mt-1">
+            <div class="kpi-card">
+              <div class="kpi-icon primary"><i class="ri-user-heart-line"></i></div>
+              <div class="kpi-details">
+                <span class="kpi-title">Active Admissions</span>
+                <div class="kpi-value"><span class="counter" id="dashTotalPatients">0</span></div>
+                <span class="trend positive"><i class="ri-arrow-up-line"></i> 12% vs week</span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon accent"><i class="ri-stethoscope-line"></i></div>
+              <div class="kpi-details">
+                <span class="kpi-title">Faculty On Duty</span>
+                <div class="kpi-value"><span class="counter" id="dashTotalDoctors">0</span></div>
+                <span class="trend neutral"><i class="ri-subtract-line"></i> Roster full</span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon success"><i class="ri-calendar-check-line"></i></div>
+              <div class="kpi-details">
+                <span class="kpi-title">Procedures</span>
+                <div class="kpi-value"><span class="counter" id="dashTotalAppointments">0</span></div>
+                <span class="trend positive"><i class="ri-arrow-up-line"></i> Scheduled</span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon warning"><i class="ri-money-dollar-circle-line"></i></div>
+              <div class="kpi-details">
+                <span class="kpi-title">Revenue</span>
+                <div class="kpi-value">$<span class="counter" id="dashTotalRevenue">0</span></div>
+                <span class="trend positive"><i class="ri-arrow-up-line"></i> On target</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card mt-1 live-ticker-card">
+            <div class="card-header">
+              <h3><i class="ri-pulse-line" style="color:var(--primary)"></i> Live Clinical Activity Stream</h3>
+              <span class="badge-status badge-stable">Auto-Sync Active</span>
+            </div>
+            <div class="activity-stream-list" id="activityStreamList">
+              <div class="activity-item">
+                <i class="ri-checkbox-circle-fill text-success"></i>
+                <span>System initialized core modules and synchronized local encrypted registry.</span>
+                <span class="time">Just now</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="analytics-grid mt-1">
+            <div class="card chart-card span-2">
+              <div class="card-header">
+                <div>
+                  <h3>Admissions & Operational Throughput</h3>
+                  <p class="card-subtitle">Monthly patient influx vs discharge metrics</p>
+                </div>
+              </div>
+              <div class="chart-container" style="position: relative; height: 260px;">
+                <canvas id="throughputChart"></canvas>
+              </div>
+            </div>
+
+            <div class="card chart-card">
+              <div class="card-header">
+                <div>
+                  <h3>Ward Bed Distribution</h3>
+                  <p class="card-subtitle">Real-time room allocation</p>
+                </div>
+              </div>
+              <div class="chart-container" style="position: relative; height: 260px;">
+                <canvas id="departmentChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid-2-col mt-1">
+            <div class="card">
+              <div class="card-header">
+                <h3>Critical Patient Triage Roster</h3>
+              </div>
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Patient Name</th>
+                      <th>MRN</th>
+                      <th>Department</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dashCriticalTable"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h3>Upcoming Scheduled Shifts</h3>
+              </div>
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Patient / Doctor</th>
+                      <th>Type</th>
+                      <th>Time</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dashApptTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="dashboard-section" id="view-patients">
+          <div class="dashboard-header">
+            <div>
+              <h1>Patient Registry & EHR</h1>
+              <p class="subtitle">Complete master index of admitted patients and electronic health records.</p>
+            </div>
+            <button class="btn btn-primary" id="btnAddPatient"><i class="ri-user-add-line"></i> Register Patient</button>
+          </div>
+
+          <div class="card mt-1">
+            <div class="table-toolbar">
+              <div class="search-bar">
+                <i class="ri-search-line"></i>
+                <input type="text" placeholder="Filter by name, MRN, or diagnosis..." id="searchPatients">
+              </div>
+              <div class="filter-chips">
+                <button class="chip active" data-status="">All</button>
+                <button class="chip" data-status="Critical">Critical</button>
+                <button class="chip" data-status="Stable">Stable</button>
+                <button class="chip" data-status="Discharged">Discharged</button>
+              </div>
+            </div>
+
+            <div class="table-responsive mt-1">
+              <table class="data-table mobile-card-table">
+                <thead>
+                  <tr>
+                    <th>Patient</th>
+                    <th>MRN</th>
+                    <th>Department</th>
+                    <th>Attending Physician</th>
+                    <th>Diagnosis</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="patientTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="dashboard-section" id="view-doctors">
+          <div class="dashboard-header">
+            <div>
+              <h1>Medical Faculty Roster</h1>
+              <p class="subtitle">Attending physicians, surgeons, and department heads.</p>
+            </div>
+            <button class="btn btn-primary" id="btnAddDoctor"><i class="ri-user-add-line"></i> Add Physician</button>
+          </div>
+
+          <div class="card mt-1">
+            <div class="table-toolbar">
+              <div class="search-bar">
+                <i class="ri-search-line"></i>
+                <input type="text" placeholder="Search physicians..." id="searchDoctors">
+              </div>
+            </div>
+            <div class="table-responsive mt-1">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Physician</th>
+                    <th>Specialty</th>
+                    <th>Department</th>
+                    <th>Contact Ext</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="doctorTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="dashboard-section" id="view-appointments">
+          <div class="dashboard-header">
+            <div>
+              <h1>Clinical Appointments</h1>
+              <p class="subtitle">Schedule and coordinate patient visits with specialists.</p>
+            </div>
+            <button class="btn btn-primary" id="btnAddAppointment"><i class="ri-calendar-add-line"></i> Schedule</button>
+          </div>
+
+          <div class="card mt-1">
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Patient</th>
+                    <th>Doctor</th>
+                    <th>Department</th>
+                    <th>Date & Time</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="appointmentTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="dashboard-section" id="view-departments">
+          <div class="dashboard-header">
+            <div>
+              <h1>Ward Capacity & Units</h1>
+              <p class="subtitle">Monitor bed capacities and department occupancy thresholds.</p>
+            </div>
+            <button class="btn btn-primary" id="btnAddDepartment"><i class="ri-building-line"></i> Add Department</button>
+          </div>
+
+          <div class="card mt-1">
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Department Name</th>
+                    <th>Department Head</th>
+                    <th>Total Beds</th>
+                    <th>Occupancy Rate</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="departmentTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="dashboard-section" id="view-pharmacy">
+          <div class="dashboard-header">
+            <div>
+              <h1>Pharmacy Inventory</h1>
+              <p class="subtitle">Manage pharmaceutical drugs and stock levels.</p>
+            </div>
+            <button class="btn btn-primary" id="btnAddPharmacy"><i class="ri-add-box-line"></i> Add Medication</button>
+          </div>
+
+          <div class="card mt-1">
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Medication Name</th>
+                    <th>Category</th>
+                    <th>Stock Units</th>
+                    <th>Unit Price</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="pharmacyTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="dashboard-section" id="view-laboratory">
+          <div class="dashboard-header">
+            <div>
+              <h1>Laboratory Diagnostics</h1>
+              <p class="subtitle">Track specimen analyses, blood work, and imaging scans.</p>
+            </div>
+            <button class="btn btn-primary" id="btnAddLabTest"><i class="ri-flask-line"></i> Order Test</button>
+          </div>
+
+          <div class="card mt-1">
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Test Name</th>
+                    <th>Patient</th>
+                    <th>Ordering Doctor</th>
+                    <th>Cost</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="labTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="dashboard-section" id="view-billing">
+          <div class="dashboard-header">
+            <div>
+              <h1>Revenue & Invoicing</h1>
+              <p class="subtitle">Patient billing records and payment tracking.</p>
+            </div>
+            <button class="btn btn-primary" id="btnAddBilling"><i class="ri-file-add-line"></i> Issue Invoice</button>
+          </div>
+
+          <div class="card mt-1">
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Invoice ID</th>
+                    <th>Patient</th>
+                    <th>Date Issued</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="billingTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="dashboard-section" id="view-reports">
+          <div class="dashboard-header">
+            <div>
+              <h1>Analytics & Executive Reports</h1>
+              <p class="subtitle">Aggregate clinical metrics and statistical audit summaries.</p>
+            </div>
+          </div>
+
+          <div class="kpi-grid mt-1">
+            <div class="kpi-card">
+              <div class="kpi-details">
+                <span class="kpi-title">Gross Operating Revenue</span>
+                <div class="kpi-value">$<span id="repTotalRev">0</span></div>
+              </div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-details">
+                <span class="kpi-title">Registered Patient Base</span>
+                <div class="kpi-value"><span id="repTotalPats">0</span></div>
+              </div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-details">
+                <span class="kpi-title">Total Active Consultations</span>
+                <div class="kpi-value"><span id="repTotalAppts">0</span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="dashboard-section" id="view-settings">
+          <div class="dashboard-header">
+            <div>
+              <h2>System Settings & Profile</h2>
+              <p class="subtitle">User identities and credentials.</p>
+            </div>
+            <button class="btn btn-primary" id="btnSaveSettings"><i class="ri-save-line"></i> Save Profile</button>
+          </div>
+
+          <div class="card mt-1">
+            <h3>User Credentials</h3>
+            <div class="form-grid mt-1">
+              <div class="form-group">
+                <label for="settingFullName">Full Name</label>
+                <input type="text" id="settingFullName" class="form-input" value="SARIM">
+              </div>
+              <div class="form-group">
+                <label for="settingRole">Clinical Role</label>
+                <input type="text" id="settingRole" class="form-input" value="Chief Medical Officer">
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
