@@ -78,7 +78,4 @@ git clone https://github.com/muhammadsatin4321-coder/hospital-management-dashboa
 
 ## ⭐ Support
 
-If you like this project, consider giving it a ⭐ on GitHub!
-
-This project is open-source and available under the MIT License.
-<img width="1920" height="924" alt="image" src="https://github.com/user-attachments/assets/9825bbcc-a00a-4948-a1cf-99ccd8ae5d85" />
+If you like this project, consider giving it a ⭐ on GitHuba00a-4948-a1cf-99ccd8ae5d85
